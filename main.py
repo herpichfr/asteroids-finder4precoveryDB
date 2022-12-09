@@ -15,29 +15,37 @@ def read_mpc_database(mpcddbpath):
 
     return df2
 
-def search_orbit_inDB(mpcdf):
+def search_orbit_inDB(mpcdf, indexes):
     """Search MPC orbit within precovery DB"""
-    orbit = Orbit.keplerian(
-        0,
-        mpcdf['a'], mpcdf['e'], mpcdf['i'], mpcdf['Node'], mpcdf['Peri'], mpcdf['M'],
-        mpcdf['Epoch'] - 2400000.5,
-        EpochTimescale.TT,
-        20,
-        0.15)
+    for index in indexes:
+        if index == -99:
+            print('fake name. Skipping')
+        else:
+            df = mpcdf.iloc[index]
+            orbit = Orbit.keplerian(
+                0,
+                df['a'], df['e'], df['i'], df['Node'], df['Peri'], df['M'],
+                df['Epoch'] - 2400000.5,
+                EpochTimescale.TT,
+                20,
+                0.15)
 
-    results = precover(orbit, DB_DIR, tolerance=1/3600)
+            results = precover(orbit, DB_DIR, tolerance=1/3600)
+            print(results)
+            # need to save dataframe
 
-    return results
+
+    return
 
     # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     # get MPC database
-    mpcdbpath = '/ssd/splus/asteroids/mpc-database/mpcorb_extended.json.gz'
+    mpcdbpath = '/epyc/ssd/users/herpich2/mpcorb_extended.json.gz'
     mpcdf = read_mpc_database(mpcdbpath)
 
     DB_DIR = '/epyc/ssd/users/herpich2/splus_idr4_nomatch_new/'
-    for i in range(mpcdf['Name'].size)[:1]:
-        result = search_orbit_inDB(mpcdf.iloc[i])
+    for ind in [[209], [210]]:
+        search_orbit_inDB(mpcdf, ind)
 
-    print(result)
+    # print(result)
     # end here
