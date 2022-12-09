@@ -39,4 +39,5 @@ if __name__ == '__main__':
     for i in range(mpcdf['Name'].size)[:1]:
         result = search_orbit_inDB(mpcdf.iloc[i])
 
+    print(result)
     # end here
