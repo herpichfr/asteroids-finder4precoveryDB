@@ -21,29 +21,33 @@ def read_mpc_database(mpcddbpath):
 def search_orbit_inDB(mpcdf, indexes):
     """Search MPC orbit within precovery DB"""
     DB_DIR = '/epyc/ssd/users/herpich2/splus_idr4_nomatch_new/'
+    savedirpath = '/astro/store/epyc3/projects3/splus_dataset/found_asteroids_20221208/'
     for index in indexes:
         if index == -99:
             print('fake name. Skipping')
         else:
-            print('calculating orbits for index', index)
-            df = mpcdf.iloc[index]
-            orbit = Orbit.keplerian(
-                0,
-                df['a'], df['e'], df['i'], df['Node'], df['Peri'], df['M'],
-                df['Epoch'] - 2400000.5,
-                EpochTimescale.TT,
-                20,
-                0.15)
+            outfilename = savedirpath + 'mp_cast' + repr(1000000 + index) + '.csv'
+            if os.path.isfile(outfilename):
+                print(outfilename, 'already exists. Skipping...')
+            else:
+                print('calculating orbits for index', index)
+                df = mpcdf.iloc[index]
+                orbit = Orbit.keplerian(
+                    0,
+                    df['a'], df['e'], df['i'], df['Node'], df['Peri'], df['M'],
+                    df['Epoch'] - 2400000.5,
+                    EpochTimescale.TT,
+                    20,
+                    0.15)
 
-            results = precover(orbit, DB_DIR, tolerance=1/3600)
-            print(results)
-            # need to save dataframe
-            if len(results) > 0:
-                savedirpath = '/astro/store/epyc3/projects3/splus_dataset/found_asteroids_20221208/'
-                if not os.path.isdir(savedirpath):
-                    os.mkdir(savedirpath)
-                print('saving results for index', index, 'to', savedirpath)
-                df.to_csv(savedirpath + 'mp_cast' + repr(1000000 + index) + '.csv', index=False)
+                results = precover(orbit, DB_DIR, tolerance=1/3600)
+                print(results)
+                # need to save dataframe
+                if len(results) > 0:
+                    if not os.path.isdir(savedirpath):
+                        os.mkdir(savedirpath)
+                    print('saving results for index', index, 'to', outfilename)
+                    df.to_csv(outfilename, index=False)
 
     return
 
