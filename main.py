@@ -43,7 +43,7 @@ def search_orbit_inDB(mpcdf, indexes):
                 if not os.path.isdir(savedirpath):
                     os.mkdir(savedirpath)
                 print('saving results for index', index, 'to', savedirpath)
-                pd.to_csv(savedirpath + 'mp_cast' + repr(1000000 + index) + '.csv', index=False)
+                df.to_csv(savedirpath + 'mp_cast' + repr(1000000 + index) + '.csv', index=False)
 
     return
 
