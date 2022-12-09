@@ -73,7 +73,7 @@ if __name__ == '__main__':
     print('creating', num_procs, 'jobs...')
 
     for ind in indexes:
-        process = multiprocessing.Process(target=search_orbit_inDB, args=(mpcdf, indexes))
+        process = multiprocessing.Process(target=search_orbit_inDB, args=(mpcdf, ind))
         jobs.append(process)
 
     # start jobs
