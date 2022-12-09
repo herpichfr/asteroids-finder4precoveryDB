@@ -57,8 +57,8 @@ if __name__ == '__main__':
     mpcdbpath = '/epyc/ssd/users/herpich2/mpcorb_extended.json.gz'
     mpcdf = read_mpc_database(mpcdbpath)
 
-    num_procs = 4
-    l = list(mpcdf.index)[:11]
+    num_procs = 40
+    l = list(mpcdf.index)
     numrows = len(l)
     if numrows % num_procs > 0:
         print('increasing number of indexes')
