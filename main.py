@@ -50,7 +50,7 @@ def search_orbit_inDB(lock, mpcdf, indexes, savedirpath):
 
                 lock.acquire(timeout=5)
                 with open(checkfilename, 'a') as checkfile:
-                    checkfile.write('%i,%i' % (index, len(results)))
+                    checkfile.write('%i,%i\n' % (index, len(results)))
                     checkfile.close()
                 lock.release()
 
@@ -74,7 +74,7 @@ if __name__ == '__main__':
     # create file to save checked asteroids
     if not os.path.isfile(os.path.join(savedirpath, 'all_tested_asts.csv')):
         with open(os.path.join(savedirpath, 'all_tested_asts.csv'), 'w') as creating_new_csv_file:
-            creating_new_csv_file.write('Index,Size')
+            creating_new_csv_file.write('Index,Size\n')
             creating_new_csv_file.close()
 
     num_procs = 40
