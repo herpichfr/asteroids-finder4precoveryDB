@@ -1,7 +1,7 @@
 # 2022-12-08 @herpichfr
 # Herpich, Fabio R - fabiorafaelh@gmail.com
 #
-import os.path
+import os
 import numpy as np
 import pandas as pd
 from precovery.orbit import Orbit, EpochTimescale
@@ -11,22 +11,21 @@ import time
 
 def read_mpc_database(mpcddbpath):
     """Read and format MPC database to a table format"""
-    df = pd.read_json("mpcorb_extended.json.gz")
+    df = pd.read_json(mpcddbpath)
     # select only more recent observations to avoid crashing pyorb
     mask = df['Last_obs'] > '2015-01-01'
     df2 = df[["Number", "Name", "a", "e", "i", "Node", "Peri", "M", "Epoch", "H", "G", "Last_obs"]][mask]
 
     return df2
 
-def search_orbit_inDB(mpcdf, indexes):
+def search_orbit_inDB(lock, mpcdf, indexes, savedirpath):
     """Search MPC orbit within precovery DB"""
-    DB_DIR = '/epyc/ssd/users/herpich2/splus_idr4_nomatch_new/'
-    savedirpath = '/astro/store/epyc3/projects3/splus_dataset/found_asteroids_20221208/'
     for index in indexes:
         if index == -99:
-            print('fake name. Skipping')
+            print('This is a filler index. Skipping')
         else:
-            outfilename = savedirpath + 'mp_cast' + repr(1000000 + index) + '.csv'
+            outfilename = os.path.join(savedirpath, 'mpc_ast' + repr(1000000 + index) + '.csv')
+            checkfilename = os.path.join(savedirpath, 'all_tested_asts.csv')
             if os.path.isfile(outfilename):
                 print(outfilename, 'already exists. Skipping...')
             else:
@@ -49,6 +48,12 @@ def search_orbit_inDB(mpcdf, indexes):
                     print('saving results for index', index, 'to', outfilename)
                     results.to_csv(outfilename, index=False)
 
+                lock.acquire(timeout=5)
+                with open(checkfilename, 'a') as checkfile:
+                    checkfile.write('%i,%i' % (index, len(results)))
+                    checkfile.close()
+                lock.release()
+
     return
 
     # Press the green button in the gutter to run the script.
@@ -56,6 +61,21 @@ if __name__ == '__main__':
     # get MPC database
     mpcdbpath = '/epyc/ssd/users/herpich2/mpcorb_extended.json.gz'
     mpcdf = read_mpc_database(mpcdbpath)
+
+    # define paths
+    # workdir
+    workdir = '/astro/store/epyc3/projects3/splus_dataset/'
+    # dir to save results of MPC search
+    savedirpath = os.path.join(workdir, 'found_asteroids_20230116/')
+    if not os.path.isdir(savedirpath):
+        os.mkdir(savedirpath)
+    # Precovery DB path
+    DB_DIR = '/epyc/ssd/users/herpich2/splus_idr4_nomatch_new/'
+    # create file to save checked asteroids
+    if not os.path.isfile(os.path.join(savedirpath, 'all_tested_asts.csv')):
+        with open(os.path.join(savedirpath, 'all_tested_asts.csv'), 'w') as creating_new_csv_file:
+            creating_new_csv_file.write('Index,Size')
+            creating_new_csv_file.close()
 
     num_procs = 40
     l = list(mpcdf.index)
@@ -76,8 +96,9 @@ if __name__ == '__main__':
     jobs = []
     print('creating', num_procs, 'jobs...')
 
+    lock = multiprocessing.Lock()
     for ind in indexes:
-        process = multiprocessing.Process(target=search_orbit_inDB, args=(mpcdf, ind))
+        process = multiprocessing.Process(target=search_orbit_inDB, args=(lock, mpcdf, ind, savedirpath))
         jobs.append(process)
 
     # start jobs
